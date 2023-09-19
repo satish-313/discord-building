@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { FileUpload } from "@/components/modals/file-upload";
+import { useRouter } from "next/navigation";
+
 import {
     Dialog,
     DialogContent,
@@ -21,7 +24,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUpload } from "@/components/modals/file-upload";
 
 const formSchema = z.object({
     name: z.string().min(1, {
@@ -34,6 +36,7 @@ const formSchema = z.object({
 
 export const InitialModal = () => {
     const [open, setopen] = useState(false);
+    const router = useRouter();
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -43,8 +46,21 @@ export const InitialModal = () => {
     });
     const isloading = form.formState.isSubmitting;
 
-    const onSumbit = async (value: z.infer<typeof formSchema>) => {
-        console.log(value);
+    const onSumbit = async (values: z.infer<typeof formSchema>) => {
+        try {
+            await fetch("/api/server", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application-json",
+                },
+                body: JSON.stringify(values),
+            });
+            form.reset();
+            router.refresh();
+            window.location.reload();
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     useEffect(() => {
